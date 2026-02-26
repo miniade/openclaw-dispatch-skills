@@ -45,8 +45,10 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Install clawhub CLI
-        run: npm i -g clawhub
+      - name: Install CLIs
+        run: |
+          npm i -g clawhub
+          npm i -g openclaw
 
       - name: Validate/package skills
         run: ./scripts/package-all.sh
