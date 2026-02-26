@@ -77,4 +77,13 @@ fi
 nohup "${CMD[@]}" >"$RUN_LOG" 2>&1 &
 PID=$!
 
+# Quick startup sanity check: allow immediate successful completion,
+# but fail fast if process died before initializing result metadata.
+sleep 1
+if ! ps -p "$PID" >/dev/null 2>&1 && [[ ! -f "$RESULT_DIR/task-meta.json" ]]; then
+  echo "Error: dispatch process exited before startup. See log: $RUN_LOG" >&2
+  tail -n 40 "$RUN_LOG" >&2 || true
+  exit 1
+fi
+
 echo "DISPATCH_STARTED pid=$PID project=$PROJECT task=$TASK_NAME workdir=$WORKDIR teams=$NEED_TEAMS run_id=$RUN_ID result_dir=$RESULT_DIR log=$RUN_LOG"
