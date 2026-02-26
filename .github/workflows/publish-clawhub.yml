@@ -1,0 +1,73 @@
+name: Publish skills to ClawHub
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Semver version for all three skills (e.g. 1.0.0)"
+        required: true
+        type: string
+      slug_prefix:
+        description: "Slug prefix to avoid global collisions"
+        required: false
+        default: "miniade-"
+        type: string
+      tags:
+        description: "Comma-separated tags"
+        required: false
+        default: "latest"
+        type: string
+      changelog:
+        description: "Changelog text"
+        required: false
+        default: ""
+        type: string
+      dry_run:
+        description: "Print publish commands only"
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      CLAWHUB_SITE: ${{ vars.CLAWHUB_SITE }}
+      CLAWHUB_REGISTRY: ${{ vars.CLAWHUB_REGISTRY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install clawhub CLI
+        run: npm i -g clawhub
+
+      - name: Validate/package skills
+        run: ./scripts/package-all.sh
+
+      - name: Login to ClawHub
+        if: ${{ !inputs.dry_run }}
+        env:
+          CLAWHUB_TOKEN: ${{ secrets.CLAWHUB_TOKEN }}
+        run: |
+          if [ -z "$CLAWHUB_TOKEN" ]; then
+            echo "CLAWHUB_TOKEN secret is required for publish." >&2
+            exit 1
+          fi
+          clawhub login --token "$CLAWHUB_TOKEN" --no-input
+          clawhub whoami
+
+      - name: Publish all skills
+        env:
+          VERSION: ${{ inputs.version }}
+          SLUG_PREFIX: ${{ inputs.slug_prefix }}
+          TAGS: ${{ inputs.tags }}
+          CHANGELOG: ${{ inputs.changelog }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: ./scripts/publish-all.sh

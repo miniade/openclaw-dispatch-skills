@@ -82,6 +82,52 @@ For this coder agent workspace:
 
 Output to `./dist`.
 
+## Manual test commands (verified)
+
+```text
+/dispatch dispatch-smoke dispatch-basic 创建文件 DISPATCH_OK.txt 内容为 ok，然后列出目录并结束。不要启动任何服务器，不要等待输入。
+```
+
+```text
+/dispatchi ralph-smoke dispatchi-basic 测试任务：写10种排序算法，TDD验证排序输出，输出 COMPLETE 然后停止。
+```
+
+```text
+/cancel <run-id>
+```
+
+## Release workflow (adopted)
+
+1. Update skill code in this repo.
+2. Run local tests in OpenClaw workspace.
+3. Commit to this repo.
+4. Publish via GitHub Action to ClawHub.
+5. Locally remove skill code (keep `dispatch.env.local`).
+6. Re-install from ClawHub and run one more verification.
+
+## GitHub Action publish
+
+Workflow file:
+
+- `.github/workflows/publish-clawhub.yml`
+
+Required secret:
+
+- `CLAWHUB_TOKEN`
+
+Optional repo variables:
+
+- `CLAWHUB_SITE`
+- `CLAWHUB_REGISTRY`
+
+Trigger manually with inputs:
+
+- `version` (required)
+- `slug_prefix` (default `miniade-`)
+- `tags` (default `latest`)
+- `changelog`
+- `dry_run`
+
 ## Notes
 
 - These are **custom skill slash commands**, not OpenClaw built-in system commands.
